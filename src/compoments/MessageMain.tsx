@@ -1,4 +1,5 @@
-import React, {
+/* eslint-disable react-hooks/exhaustive-deps */
+import {
   FC,
   ChangeEvent,
   MouseEvent,
@@ -10,6 +11,7 @@ import React, {
 } from "react";
 import { Button, Form } from "react-bootstrap";
 import MessageItems from "./MessageItems";
+import { APPCONSTANTS } from "../constants/app.constants";
 import { useMutation, gql } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -42,33 +44,33 @@ interface Message {
 
 interface Props {
   channelSelected: string;
+  channelIdSelected: string;
   userSelected: string;
   messageList: Message["message"];
   setMessageList: Dispatch<SetStateAction<any[]>>;
   setNewestMessageId: Dispatch<SetStateAction<string>>;
   manageGetMoreMessage: Function;
+  messageLoading: boolean;
 }
 
 const MessageMain: FC<Props> = ({
   channelSelected,
+  channelIdSelected,
   messageList,
   userSelected,
   setMessageList,
   manageGetMoreMessage,
   setNewestMessageId,
+  messageLoading,
 }) => {
   const divRef = useRef<any>(null);
-  const [postMessage, { loading, error, data }] = useMutation(POST_MESSAGE);
+  const [postMessage, { error, data }] = useMutation(POST_MESSAGE);
   const [messageSending, setMessageSending] = useState<string>("");
   const [copyMessageSending, setCopyMessageSending] = useState<string>("");
 
   const goToButtom = () => {
     divRef.current.scrollTop = divRef.current.scrollHeight;
   };
-
-  useEffect(() => {
-    goToButtom();
-  }, [messageList]);
 
   useEffect(() => {
     if (error) {
@@ -91,6 +93,7 @@ const MessageMain: FC<Props> = ({
     setNewestMessageId(data.postMessage.messageId);
     setMessageSending("");
     setCopyMessageSending("");
+    goToButtom();
   };
   const errorMessageHandle = () => {
     let errorMessage: object = {
@@ -103,6 +106,7 @@ const MessageMain: FC<Props> = ({
     setMessageList([...messageList, errorMessage]);
     setMessageSending("");
     setCopyMessageSending("");
+    goToButtom();
   };
 
   const messageSendingHandle = (e: ChangeEvent<HTMLInputElement>) => {
@@ -114,7 +118,7 @@ const MessageMain: FC<Props> = ({
     e.preventDefault();
     postMessage({
       variables: {
-        channelId: channelSelected,
+        channelId: channelIdSelected,
         text: messageSending,
         userId: userSelected,
       },
@@ -123,46 +127,50 @@ const MessageMain: FC<Props> = ({
   };
   return (
     <MessageMainBox>
-      <h4>{channelSelected} Channel</h4>
-      <MessageListBox ref={divRef}>
-        <Button
-          className="w-100"
-          onClick={() => manageGetMoreMessage(true)}
-          variant="outline-info"
-          style={{ marginBottom: 10 }}
-        >
-          Read More Top <FontAwesomeIcon icon={faArrowUp} />
-        </Button>
-        {messageList.map(({ userId, text, messageId, datetime, status }) => (
-          <MessageItems
-            key={messageId}
-            userId={userId}
-            text={text}
-            messageId={messageId}
-            datetime={datetime}
-            status={status}
-            userIdActive={userSelected}
-          />
-        ))}
-        <Button
-          className="w-100"
-          onClick={() => manageGetMoreMessage(false)}
-          variant="outline-info"
-        >
-          Read More Down <FontAwesomeIcon icon={faArrowDown} />
-        </Button>
-      </MessageListBox>
+      <h4>
+        <b>{channelSelected} Channel</b>
+      </h4>
+      {messageLoading && <MessageListBox>Loading . . .</MessageListBox>}
+      {!messageLoading && (
+        <MessageListBox ref={divRef}>
+          <Button
+            className="w-100"
+            onClick={() => manageGetMoreMessage(true, channelIdSelected)}
+            variant="outline-info"
+            style={{ marginBottom: 10 }}
+          >
+            {APPCONSTANTS.APP_READ_MORE} <FontAwesomeIcon icon={faArrowUp} />
+          </Button>
+          {messageList.map(({ userId, text, messageId, datetime, status }) => (
+            <MessageItems
+              key={messageId}
+              userId={userId}
+              text={text}
+              messageId={messageId}
+              datetime={datetime}
+              status={status}
+              userIdActive={userSelected}
+            />
+          ))}
+          <Button
+            className="w-100"
+            onClick={() => manageGetMoreMessage(false, channelIdSelected)}
+            variant="outline-info"
+          >
+            {APPCONSTANTS.APP_READ_MORE} <FontAwesomeIcon icon={faArrowDown} />
+          </Button>
+        </MessageListBox>
+      )}
 
       <Form.Group
         className="mb-0 mt-1"
         controlId="exampleForm.ControlTextarea1"
       >
-        {error && <p>{error.message}</p>}
         <Form.Control
           as="textarea"
           rows={3}
           value={messageSending}
-          placeholder="Type your message here..."
+          placeholder={APPCONSTANTS.APP_MESSAGE_PLACEHOLDER}
           onChange={messageSendingHandle}
         />
         <Button
@@ -170,8 +178,10 @@ const MessageMain: FC<Props> = ({
           onClick={postMessageHandle}
           variant="info"
           style={{ color: "#fff" }}
+          disabled={messageLoading}
         >
-          Send Message <FontAwesomeIcon icon={faPaperPlane} />
+          {APPCONSTANTS.APP_SENT_MESSAGE}{" "}
+          <FontAwesomeIcon icon={faPaperPlane} />
         </Button>
       </Form.Group>
     </MessageMainBox>

@@ -1,14 +1,33 @@
-import React from "react";
-import { Row, Col } from "react-bootstrap";
-export default function HeaderApp() {
+import { FC } from "react";
+import { Row, Col, Card } from "react-bootstrap";
+import { APPCONSTANTS } from "../constants/app.constants";
+import { THEME } from "../styles/theme";
+import styled from "styled-components";
+
+const Header = styled.div((props) => ({
+  height: 70,
+  backgroundColor: THEME[1].BG_COLOR_HEADER,
+  color: "#fff",
+  padding: 8,
+}));
+
+const HeaderApp: FC = () => {
   return (
-    <div className="page-title">
+    <div className="page-title mb-1 mt-1">
       <Row>
-        <Col xl={6} lg={6} md={6} sm={6} xs={12}>
-          <h5 className="title">1 day chat App</h5>
-          <p>All messages will be deleted at every 00:00 UTC</p>
+        <Col xl={12} lg={12} md={12} sm={12} xs={12}>
+          <Card>
+            <Header>
+              <h5 className="title">
+                <b>{APPCONSTANTS.APP_NAME}</b>
+              </h5>
+              {APPCONSTANTS.APP_DETAIL}
+            </Header>
+          </Card>
         </Col>
       </Row>
     </div>
   );
-}
+};
+
+export default HeaderApp;

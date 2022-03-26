@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect } from "react";
 import "./App.css";
 import { Card, Container } from "react-bootstrap";
 import { UserInterface } from "./interfaces/user.interface";
@@ -8,8 +9,10 @@ import MessageMain from "./compoments/MessageMain";
 import SettingMain from "./compoments/SettingMain";
 import { Row, Col } from "react-bootstrap";
 import { USERS, CHANNELS } from "./config/app.config";
+import { THEME } from "./styles/theme";
 
 import { gql, useLazyQuery } from "@apollo/client";
+
 const FETCH_LAST_MESSAGE = gql`
   query FetchLatestMessages($channelId: String!) {
     fetchLatestMessages(channelId: $channelId) {
@@ -20,6 +23,7 @@ const FETCH_LAST_MESSAGE = gql`
     }
   }
 `;
+
 const FETCH_MORE_MESSAGE = gql`
   query fetchMoreMessages(
     $channelId: String!
@@ -36,6 +40,8 @@ const FETCH_MORE_MESSAGE = gql`
 `;
 
 function App() {
+  const channelList: ChannelInterface["channelList"] = CHANNELS;
+  const userList: UserInterface["usersList"] = USERS;
   const [userSelected, setUserSelected] = useState<string>(USERS[0].userId);
   const [channelSelected, setChannelSelected] = useState<string>(
     CHANNELS[0].name
@@ -43,25 +49,32 @@ function App() {
   const [channelIdSelected, setChannelIdSelected] = useState<string>(
     CHANNELS[0].channelId
   );
-  const [channelList, setChannelList] =
-    useState<ChannelInterface["channelList"]>(CHANNELS);
-  const [userList, setUserList] = useState<UserInterface["usersList"]>(USERS);
   const [messageList, setMessageList] = useState<any[]>([]);
   const [getMessage, { loading, data }] = useLazyQuery(FETCH_LAST_MESSAGE);
   const [getMoreMessage] = useLazyQuery(FETCH_MORE_MESSAGE, {
     onCompleted: (data) => {
-      console.log(data);
       manageMessage(data.fetchMoreMessages);
     },
   });
   const [oldestMessageId, setOldestMessageId] = useState<string>("");
   const [newestMessageId, setNewestMessageId] = useState<string>("");
+  const [intervalID, setIntervalID] = useState<any>(null);
+
   useEffect(() => {
     getMessage({ variables: { channelId: channelIdSelected } });
     if (data) {
       manageMessage(data.fetchLatestMessages);
     }
-  }, [channelIdSelected, data, getMessage]);
+  }, [data, getMessage]);
+
+  useEffect(() => {
+    startIntervalChat(channelIdSelected, newestMessageId);
+  }, [newestMessageId]);
+
+  const changeChannelHandle = (channelId: string) => {
+    setMessageList([]);
+    getMessage({ variables: { channelId: channelId } });
+  };
 
   const manageMessage = (messageComing: any) => {
     const items = [...messageList, ...messageComing];
@@ -70,20 +83,38 @@ function App() {
     );
     if (items.length > 0) {
       setOldestMessageId(items[0].messageId);
-      setNewestMessageId(items[items.length - 1].messageId);
+      for (let i = items.length - 1; i > 0; i--) {
+        if (items[i].status !== "erorr") {
+          setNewestMessageId(items[i].messageId);
+          break;
+        }
+      }
     }
     setMessageList(items);
   };
 
-  const manageGetMoreMessage = (old: boolean) => {
-    console.log("call manageGetMoreMessage");
+  const manageGetMoreMessage = (old: boolean, channelId: string) => {
     getMoreMessage({
       variables: {
-        channelId: channelIdSelected,
+        channelId: channelId,
         messageId: old ? oldestMessageId : newestMessageId,
         old: old,
       },
     });
+  };
+
+  const startIntervalChat = (channelId: string, newestMessageId: string) => {
+    clearInterval(intervalID);
+    const newIntervalId = setInterval(() => {
+      getMoreMessage({
+        variables: {
+          channelId: channelId,
+          messageId: newestMessageId,
+          old: false,
+        },
+      });
+    }, 5000);
+    setIntervalID(newIntervalId);
   };
 
   return (
@@ -91,28 +122,32 @@ function App() {
       <div style={{ maxHeight: 100 }}>
         <HeaderApp />
       </div>
-      <div className="content-wrapper">
+      <div className="content-wrapper mb-1">
         <Row>
           <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-            <Card style={{ backgroundColor: "#f4f5fb" }}>
+            <Card style={{ backgroundColor: THEME[1].MAIN_BG_COLOR }}>
               <Row>
-                <Col xl={4} lg={4} md={4} sm={3} xs={3}>
+                <Col xl={12} lg={12} md={12} sm={12} xs={12}>
                   <SettingMain
                     userList={userList}
                     channelList={channelList}
                     setUserSelected={setUserSelected}
+                    channelIdSelected={channelIdSelected}
                     setChannelIdSelected={setChannelIdSelected}
                     setChannelSelected={setChannelSelected}
+                    changeChannelHandle={changeChannelHandle}
                   />
                 </Col>
-                <Col xl={8} lg={8} md={8} sm={9} xs={9}>
+                <Col xl={12} lg={12} md={12} sm={12} xs={12}>
                   <MessageMain
                     channelSelected={channelSelected}
+                    channelIdSelected={channelIdSelected}
                     userSelected={userSelected}
                     messageList={messageList}
                     setMessageList={setMessageList}
                     manageGetMoreMessage={manageGetMoreMessage}
                     setNewestMessageId={setNewestMessageId}
+                    messageLoading={loading}
                   />
                 </Col>
               </Row>

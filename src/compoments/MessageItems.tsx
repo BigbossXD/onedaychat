@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { FC } from "react";
 import Image from "react-bootstrap/Image";
 import moment from "moment";
 import { USERS } from "../config/app.config";
@@ -35,7 +35,6 @@ const MessageItems: FC<Props> = ({
   userId,
   userIdActive,
   text,
-  messageId,
   datetime,
   status,
 }) => {

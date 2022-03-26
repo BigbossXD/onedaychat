@@ -7,13 +7,12 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider,
-  useQuery,
-  gql,
 } from "@apollo/client";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { GRAPHQL_URL } from "./config/app.config";
 
 const client = new ApolloClient({
-  uri: "https://angular-test-backend-yc4c5cvnnq-an.a.run.app/graphql",
+  uri: GRAPHQL_URL,
   cache: new InMemoryCache(),
 });
 

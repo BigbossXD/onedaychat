@@ -10,6 +10,7 @@ import {
   useQuery,
   gql,
 } from "@apollo/client";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const client = new ApolloClient({
   uri: "https://angular-test-backend-yc4c5cvnnq-an.a.run.app/graphql",

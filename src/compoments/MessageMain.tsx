@@ -12,7 +12,7 @@ import {
 import { Button, Form } from "react-bootstrap";
 import MessageItems from "./MessageItems";
 import { APPCONSTANTS } from "../constants/app.constants";
-import { useMutation, gql } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
@@ -20,17 +20,7 @@ import {
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { MessageListBox, MessageMainBox } from "../styles/MessageMainStyle";
-
-const POST_MESSAGE = gql`
-  mutation PostMessage($channelId: String!, $text: String!, $userId: String!) {
-    postMessage(channelId: $channelId, text: $text, userId: $userId) {
-      userId
-      text
-      messageId
-      datetime
-    }
-  }
-`;
+import { POST_MESSAGE } from "../services/graphql.service";
 
 interface Message {
   message: {

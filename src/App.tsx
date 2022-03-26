@@ -11,33 +11,11 @@ import { Row, Col } from "react-bootstrap";
 import { USERS, CHANNELS } from "./config/app.config";
 import { THEME } from "./styles/theme";
 
-import { gql, useLazyQuery } from "@apollo/client";
-
-const FETCH_LAST_MESSAGE = gql`
-  query FetchLatestMessages($channelId: String!) {
-    fetchLatestMessages(channelId: $channelId) {
-      userId
-      text
-      messageId
-      datetime
-    }
-  }
-`;
-
-const FETCH_MORE_MESSAGE = gql`
-  query fetchMoreMessages(
-    $channelId: String!
-    $messageId: String!
-    $old: Boolean!
-  ) {
-    fetchMoreMessages(channelId: $channelId, messageId: $messageId, old: $old) {
-      userId
-      text
-      messageId
-      datetime
-    }
-  }
-`;
+import { useLazyQuery } from "@apollo/client";
+import {
+  FETCH_LAST_MESSAGE,
+  FETCH_MORE_MESSAGE,
+} from "./services/graphql.service";
 
 function App() {
   const channelList: ChannelInterface["channelList"] = CHANNELS;

@@ -57,19 +57,24 @@ const MessageMain: FC<Props> = ({
   const [postMessage, { error, data }] = useMutation(POST_MESSAGE);
   const [messageSending, setMessageSending] = useState<string>("");
   const [copyMessageSending, setCopyMessageSending] = useState<string>("");
+  const [firstLoad, setfirstLoad] = useState<boolean>(true);
 
   const goToButtom = () => {
     divRef.current.scrollTop = divRef.current.scrollHeight;
   };
 
   useEffect(() => {
+    if (firstLoad) {
+      getData();
+      setfirstLoad(false);
+    }
     if (error) {
       errorMessageHandle();
     }
     if (data) {
       successMessageHandle(data);
     }
-  }, [error, data]);
+  }, [error, data, firstLoad]);
 
   const successMessageHandle = (data: any) => {
     let successMessage: object = {
@@ -84,6 +89,7 @@ const MessageMain: FC<Props> = ({
     setMessageSending("");
     setCopyMessageSending("");
     goToButtom();
+    storeDataMessage("");
   };
   const errorMessageHandle = () => {
     let errorMessage: object = {
@@ -94,14 +100,36 @@ const MessageMain: FC<Props> = ({
       status: "erorr",
     };
     setMessageList([...messageList, errorMessage]);
-    setMessageSending("");
-    setCopyMessageSending("");
     goToButtom();
+    storeDataMessage("");
+  };
+
+  const storeDataMessage = async (message: string) => {
+    try {
+      await localStorage.setItem("@last_Hold_Msg", message);
+    } catch (e) {
+      console.log(JSON.stringify(e));
+      // saving error
+    }
+  };
+
+  const getData = async () => {
+    try {
+      const assLastHoldingMsg = await localStorage.getItem("@last_Hold_Msg");
+      setMessageSending(assLastHoldingMsg !== null ? assLastHoldingMsg : "");
+      setCopyMessageSending(
+        assLastHoldingMsg !== null ? assLastHoldingMsg : ""
+      );
+    } catch (e) {
+      console.log("error");
+      // error reading value
+    }
   };
 
   const messageSendingHandle = (e: ChangeEvent<HTMLInputElement>) => {
     setMessageSending(e.target.value);
     setCopyMessageSending(e.target.value);
+    storeDataMessage(e.target.value);
   };
 
   const postMessageHandle = (e: MouseEvent<HTMLButtonElement>) => {
@@ -113,15 +141,19 @@ const MessageMain: FC<Props> = ({
         userId: userSelected,
       },
     });
-    setMessageSending("");
   };
   return (
     <MessageMainBox>
       <h4>
         <b>{channelSelected} Channel</b>
       </h4>
-      {messageLoading && <MessageListBox>Loading . . .</MessageListBox>}
-      {!messageLoading && (
+      {messageLoading && (
+        <MessageListBox>{APPCONSTANTS.APP_LOADING}</MessageListBox>
+      )}
+      {!messageLoading && messageList.length <= 0 && (
+        <MessageListBox>{APPCONSTANTS.APP_NO_MESSAGE}</MessageListBox>
+      )}
+      {!messageLoading && messageList.length > 0 && (
         <MessageListBox ref={divRef}>
           <Button
             className="w-100"

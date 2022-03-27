@@ -4,9 +4,9 @@ import "./App.css";
 import { Card, Container } from "react-bootstrap";
 import { UserInterface } from "./interfaces/user.interface";
 import { ChannelInterface } from "./interfaces/channel.interface";
-import HeaderApp from "./compoments/HeaderApp";
-import MessageMain from "./compoments/MessageMain";
-import SettingMain from "./compoments/SettingMain";
+import HeaderApp from "./components/HeaderApp";
+import MessageMain from "./components/MessageMain";
+import SettingMain from "./components/SettingMain";
 import { Row, Col } from "react-bootstrap";
 import { USERS, CHANNELS } from "./config/app.config";
 import { THEME } from "./styles/theme";
@@ -37,13 +37,18 @@ function App() {
   const [oldestMessageId, setOldestMessageId] = useState<string>("");
   const [newestMessageId, setNewestMessageId] = useState<string>("");
   const [intervalID, setIntervalID] = useState<any>(null);
+  const [fistLoad, setFistLoad] = useState<boolean>(true);
 
   useEffect(() => {
+    if (fistLoad) {
+      getData();
+      setFistLoad(false);
+    }
     getMessage({ variables: { channelId: channelIdSelected } });
     if (data) {
       manageMessage(data.fetchLatestMessages);
     }
-  }, [data, getMessage]);
+  }, [data, getMessage, fistLoad]);
 
   useEffect(() => {
     startIntervalChat(channelIdSelected, newestMessageId);
@@ -52,6 +57,25 @@ function App() {
   const changeChannelHandle = (channelId: string) => {
     setMessageList([]);
     getMessage({ variables: { channelId: channelId } });
+  };
+
+  const getData = async () => {
+    try {
+      const assUserName = await localStorage.getItem("@user_Name");
+      const assChannelId = await localStorage.getItem("@channel_Id");
+      const assChannelName = await localStorage.getItem("@channel_Name");
+      setUserSelected(assUserName !== null ? assUserName : USERS[0].userId);
+      setChannelIdSelected(
+        assChannelId !== null ? assChannelId : CHANNELS[0].channelId
+      );
+      setChannelSelected(
+        assChannelName !== null ? assChannelName : CHANNELS[0].name
+      );
+      getMessage({ variables: { channelId: assChannelId } });
+    } catch (e) {
+      console.log("error");
+      // error reading value
+    }
   };
 
   const manageMessage = (messageComing: any) => {
@@ -111,9 +135,11 @@ function App() {
                     channelList={channelList}
                     setUserSelected={setUserSelected}
                     channelIdSelected={channelIdSelected}
+                    channelSelecte={channelSelected}
                     setChannelIdSelected={setChannelIdSelected}
                     setChannelSelected={setChannelSelected}
                     changeChannelHandle={changeChannelHandle}
+                    userSelected={userSelected}
                   />
                 </Col>
                 <Col xl={12} lg={12} md={12} sm={12} xs={12}>

@@ -6,4 +6,6 @@ export const APPCONSTANTS = {
   APP_MESSAGE_PLACEHOLDER: "Type your message here...",
   APP_READ_MORE: "Read More",
   APP_SENT_MESSAGE: "Send Message",
+  APP_NO_MESSAGE: 'Not have messages on this channel yet.',
+  APP_LOADING: 'Loading data . . .',
 };
